@@ -1,0 +1,6 @@
+1. '\n' character in path name messes up everything. Must be
+   translated. 
+2. White space cannot be used as a part of user name. This
+   becomes a problem on Windows. Workaround is to make a copy
+   of the account in the cygwin /etc/password file and change
+   the user name to something with no white space.

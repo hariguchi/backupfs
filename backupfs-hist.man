@@ -1,0 +1,80 @@
+.\" $Id: backupfs-hist.man,v 1.5 2005/04/21 23:49:59 cvsremote Exp $
+.\"
+.\"   Copyright (c) 2005, Yoichi Hariguchi
+.\"   All rights reserved.
+.\"
+.\"   Redistribution and use in source and binary forms, with or without
+.\"   modification, are permitted provided that the following conditions are
+.\"   met:
+.\"
+.\"       o Redistributions of source code must retain the above copyright
+.\"         notice, this list of conditions and the following disclaimer.
+.\"       o Redistributions in binary form must reproduce the above
+.\"         copyright notice, this list of conditions and the following
+.\"         disclaimer in the documentation and/or other materials provided
+.\"         with the distribution.
+.\"       o Neither the name of the Yoichi Hariguchi nor the names of its
+.\"         contributors may be used to endorse or promote products derived
+.\"         from this software without specific prior written permission.
+.\"
+.\"   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+.\"   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+.\"   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+.\"   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+.\"   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+.\"   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+.\"   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\"   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\"   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\"   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+.\"   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\"
+.TH BACKUPFS-HIST 1
+.SH NAME
+backupfs\-hist \- show backup history
+.SH SYNOPSIS
+.B backupfs
+[-n years] backup\-root\-dir path
+.SH DESCRIPTION
+.I backupfs\-hist
+shows all versions of the named 
+.I path,
+looking backwards in time, stored under the
+.I backup\-root\-dir
+directory.
+
+.SS Options
+.TP
+.B \-n years
+Check for
+.I years
+year of backup history. Default is 2 years.
+
+.SH EXAMPLES
+
+Print a backup hitory of /etc/shadow whose backup root
+directory is /backup/hosts/foo:
+
+.PD 0
+.RS 4
+% backupfs-hist /backup/hosts/foo /etc/shadow
+.P
+/backup/hosts/pochi/2005/02/13/etc/shadow
+.P
+/backup/hosts/pochi/2004/10/20/etc/shadow
+.P
+/backup/hosts/pochi/2003/12/16/etc/shadow
+.RE
+.PD
+
+.SH AUTHOR
+.PD 0
+Yoichi Hariguchi
+.P
+<\`echo hariguchi=users-sourceforge-net | tr \\\\075\\\\055 \\\\100\\\\056\`>
+.PD
+
+.SH SEE ALSO
+backupfs(8),
+http://cm.bell-labs.com/magic/man2html/1/history

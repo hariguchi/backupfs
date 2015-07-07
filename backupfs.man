@@ -1,0 +1,254 @@
+.\" $Id: backupfs.man,v 1.10 2005/04/21 23:49:59 cvsremote Exp $
+.\"
+.\"   Copyright (c) 2005, Yoichi Hariguchi
+.\"   All rights reserved.
+.\"
+.\"   Redistribution and use in source and binary forms, with or without
+.\"   modification, are permitted provided that the following conditions are
+.\"   met:
+.\"
+.\"       o Redistributions of source code must retain the above copyright
+.\"         notice, this list of conditions and the following disclaimer.
+.\"       o Redistributions in binary form must reproduce the above
+.\"         copyright notice, this list of conditions and the following
+.\"         disclaimer in the documentation and/or other materials provided
+.\"         with the distribution.
+.\"       o Neither the name of the Yoichi Hariguchi nor the names of its
+.\"         contributors may be used to endorse or promote products derived
+.\"         from this software without specific prior written permission.
+.\"
+.\"   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+.\"   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+.\"   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+.\"   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+.\"   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+.\"   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+.\"   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\"   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\"   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\"   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+.\"   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\"
+.TH BACKUPFS 8
+.SH NAME
+backupfs \- a command level Plan 9 dump file system clone
+.SH SYNOPSIS
+.B backupfs
+[[user@]host:]source destination
+.SH DESCRIPTION
+.I backupfs
+is a command level clone of the Plan 9 dump file system.
+.I backupfs
+makes a snapshot of the directory/file tree under the
+.I source
+directory in the
+.I destination/yyyy/mm/dd
+directory; yyyy, mm, and dd are year, month, and day when the
+command was issued. Both
+.I source
+and
+.I destination
+must be full paths (starting with "/".)
+
+.I backupfs
+walks through the tree under 
+.I source
+and it makes:
+.RS 4
+.TP 3
+1. a copy of the directory tree under
+.I source
+in
+.I destination/yyyy/mm/dd
+wherein the owner, group, and modes of the directories are
+intact
+.TP
+2. a copy of files if they were changed since the last backup
+wherein the owner, group, and modeof the files are intact
+.TP
+3. a hard link to the last backed-up files instead of copying
+them unless they were changed since the last backup
+.LP
+.RE
+so that
+.I backupfs
+saves backup disk space. This feature is particularly useful
+for backing up a huge file system daily when the file system
+has relatively small number of changes a day.
+
+A file is regarded as
+.I changed
+if its ctime or mtime is different from that in the last back up.
+
+It is recommended that
+.I destination
+be in a different file system from
+.I source
+so that the backup file system will most likely be safe in case
+the file system to which
+.I source
+belongs crashes.
+
+.SS Network Extension
+.I backupfs
+backs up the tree under
+.I source
+on the remote host
+.I host
+when the first parameter is
+.I host:source
+or
+.I user@host:source.
+Backed-up files are transfered over an SSH session with public
+key authentication. The local host (back up server) must have a
+secret key named
+.I .id_rsa
+under
+.I destination.
+The secret key must not have a passphrase if you want to
+automate the back up using
+.I cron
+(or something like that.) The remote host must have the user
+account either 
+.I backupfs
+whose group is
+.I backupfs
+or
+.I user.
+The remote host must also have the corresponding public key in
+its
+.I $HOME/.ssh/authorized_keys
+file.
+
+It is highly recommended to set the owner of the secret key
+file to root and its mode to 400 since it does not have a
+passphrase. If the installation is correctly done, the user
+.I backupfs
+has a special shell that allows to execute the
+.I backupfs
+related commands for the sake of remote hosts' security.
+
+It is no need to use a different user rather than the user
+.I backupfs
+for unix remote clients. It actually creates a security
+breach. However, it may be necessary to use an
+individual user account for windows remote clients since
+windows does not support setuid (as far as I know.)
+
+
+.SH EXAMPLES
+.SS Issuing Commands
+Here are command line examples to back up /home/htdocs on the
+local host to /backup/hosts/foo and bar:/etc (/etc on remote
+host bar) to /backup/fosts/bar. Remote host bar has an user account for
+.I backupfs.
+Its home directory is /home/backupfs and password
+authentication is disabled.
+
+SSH secret and public keys are created by
+.I ssh-keygen.
+The secret key is stored as /backup/hosts/bar/.id_rsa. The
+public key is added to
+bar:/home/backupfs/.ssh/authorized_keys.
+
+Assume you ran the first time backup on Feb. 24, 2005 as
+follows:
+
+.PD 0
+.RS 4
+backupfs /home/htdocs /backup/hosts/foo
+.P
+backupfs bar:/etc /backup/hosts/bar
+.RE
+
+In this case, the entire trees are copied as:
+
+.RS 4
+/backup/hosts/foo/2005/02/24/home/htdocs
+.P
+/backup/hosts/bar/2005/02/24/etc
+.RE
+.PD
+
+respectively on the local host.
+
+Now assume /etc/passwd on bar was changed and /etc/resol.conv
+on bar was not changed after the Feb. 24 backup; then you
+ran
+.I backupfs
+on Feb. 25, 2005 against the same directory trees using the
+same commands. In this case,
+.I backupfs:
+.RS 4
+.TP 3
+1. copies bar:/etc/passwd to
+/backup/hosts/bar/2005/02/25/etc
+.TP
+2. makes a hard link of
+/backup/hosts/bar/2005/02/24/etc/resolv.conf to
+/backup/hosts/bar/2005/02/25/etc
+.LP
+.RE
+
+since the last backup date is Feb. 24.
+
+.SS Daily Backup with Cron
+Here is an example of daily backup with cron for /home/htdocs
+on the local host and bar:/etc.
+
+Create the following file called backup.sh, set its mode
+to 755, and store it to the /etc/cron.daily directory.
+
+.PD 0
+.RS 4
+PATH=${PATH}:/usr/local/bin
+.P
+export PATH
+
+rootDir=/backup/hosts
+.P
+barDir=${rootDir}/bar
+.P
+lclDir=${rootDir}/localhost
+.P
+backupfs /home/htdocs $lclDir >$lclDir/log 2>$lclDir/error-log
+.P
+backupfs bar:/etc     $barDir >$barDir/log 2>$barDir/error-log
+.RE
+.PD
+
+Most Unix systems usually have a cron configuration to
+run all the executable files under /etc/cron.daily once a day.
+
+.\" .SH FILES
+
+.SH SECURITY
+
+The SSH secret key has no passphrase for automatic backup. User
+account
+.I backupfs
+can, however, run only several commands.
+
+.SH BUGS
+
+Must run
+.I backupfs
+interactively once at the very first time for remote backups in
+order to add an SSH host key to /root/.ssh/known_hosts.
+
+.I tar
+command must be GNU tar. Otherwise path names longer than 100
+characters do not work.
+
+.SH AUTHOR
+.PD 0
+Yoichi Hariguchi
+.P
+<\`echo hariguchi=users-sourceforge-net | tr \\\\075\\\\055 \\\\100\\\\056\`>
+.PD
+
+.SH SEE ALSO
+backupfs-hist(1),
+http://cm.bell-labs.com/magic/man2html/4/fs,
+ssh-keygen(1)

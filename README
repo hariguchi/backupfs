@@ -1,0 +1,63 @@
+1. LOCAL AND REMOTE BACKUPS
+
+0. Install boost C++ Libraries (http://www.boost.org/)
+
+1. WINDOWS ONLY: install cygwin including sshd
+     http://www.cygwin.com/
+     http://pigtail.net/LRP/printsrv/cygwin-sshd.html
+   on the windows machines which you want to run backupfs
+   client. Windows machines can become *ONLY* backupfs clinets.
+2. Open the backupfs source package on local host (server) and
+   remote hosts
+3. Run "make" on local host and remote hosts
+4. Become root (Administrator on Windows) and run "make
+   install" on local host and remote hosts.
+
+
+2. UNIX BACKUPFS SERVER
+
+1. Run "make ssh-keygen" to create an SSH authentication key
+   pair with no passphrase.
+2. Copy the secret key (id_rsa) to the backup root directory
+   for a remote host as .id_rsa. If the backup root directory
+   for host foo is /backup/foo, copy id_rsa as
+   /backup/foo/.id_rsa. You can use the same secret key for
+   multiple hosts as well as use a different key for each 
+   remote host.
+
+
+3. WINDOWS REMOTE BACKUPFS CLIENTS
+
+1. Create an account "backupfs" with "Computer Administrator"
+   privilege on a Windows machine
+2. Run the following commands in a cygwin shell console:
+     # ssh Administrator@localhost
+     # mkpasswd -l > /etc/passwd
+3. Change the group of all the files and directories under the
+   top directory to be backed up to root. Use the following
+   command if the top directory is /cygdrive/c/Documents\ and Settings/foo:
+     chgrp -R root /cygdrive/c/Documents\ and Settings/foo
+4. Change the access mode of all the files and directories
+   under the top directory to be backed up so that backupfs can
+   read. The following is example commands when the top
+   directory is /cygdrive/c/Documents\ and Settings/foo:
+     # find /cygdrive/c/Documents\ and Settings/foo -type d \
+     -exec chmod 750 {} \;
+     # find /cygdrive/c/Documents\ and Settings/foo -type f \
+     -exec chmod 640 {} \;
+
+
+4. REMOTE BACKUPFS CLIENTS
+
+1. Add the matching SSH authentication public key (created in
+   Section 2.1) to the $HOME/.ssh/authorized_keys file on each
+   remotehost. In the above example, add the content of
+   id_rsa.pub to foo:/home/backupfs/.ssh/authorized_keys.
+2. Run backupfs against each remote host interactively. This is
+   necessary to add SSH host keys to /root/.ssh/known_hosts.
+   For example, run "backupfs foo:/etc /backup/foo" if you want
+   to back up /etc on remote host foo into /backup/foo on the
+   local host.
+3. Once backupfs is run interactively against a remote host,
+   you can use backupfs to back up the remote host's
+   directories non-interactively.

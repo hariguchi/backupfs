@@ -1,3 +1,45 @@
+
+                           backupfs
+                   A clone of Plan9's dumpfs
+
+
+                       Yoichi Hariguchi
+
+
+Usage:
+
+  1.  backupfs /full/path/of/target /full/path/of/backups
+
+      This makes a daily snapshot of /full/path/of/target
+      under /full/path/of/backups. For example, assume
+      `backupfs' is executed on July 20, 2015 for the FIRST
+      TIME, everything under /full/path/of/target is copied to
+      the following directory:
+
+      /full/path/of/backups/2015/07/20/full/path/of/target
+
+      Now assume it is executed on July 23, 2015 for
+      the second time (`backupfs' does not require to be
+      executed everyday), everything under /full/path/of/target
+      is copied to the following directory:
+
+      /full/path/of/backups/2015/07/23/full/path/of/target
+
+      For the second time and after, only new and changed files
+      are copied. The files with no change were hard-linked to
+      the same file under /full/path/of/backups. Both target
+      and backup directories must be full path.
+
+  2. backupfs host:/full/path/of/target /full/path/of/backups
+     This does the same thing as '1.', but the target directory
+     is located in a remote host called "host". `backupfs' uses
+     ssh to copy; you need to create an ssh key pairs. See
+     below for more details.
+
+
+
+How to install:
+
 1. LOCAL AND REMOTE BACKUPS
 
 0. Install boost C++ Libraries (http://www.boost.org/)
